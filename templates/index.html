@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analiza tu CSV con IA</title>
+  <style>
+    /* Estilos generales para el contenedor y texto */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #eef2f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 2rem;
+    }
+
+    .container {
+      background-color: white;
+      max-width: 600px;
+      width: 100%;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0077b6;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Formulario */
+    label {
+      margin-top: 1rem;
+      font-weight: bold;
+      display: block;
+      color: #333;
+    }
+
+    input[type="file"],
+    textarea {
+      margin-top: 0.5rem;
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #005f87;
+    }
+
+    /* Estilos para la respuesta */
+    #respuesta {
+      display: none;
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background-color: #f0fdfc;
+      border-left: 6px solid #00bfa6;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      color: #064e3b;
+      font-family: Consolas, monospace;
+      position: relative;
+      animation: fadeIn 0.5s ease-in-out;
+      box-shadow: 0 4px 12px rgba(0, 191, 166, 0.2);
+    }
+
+    #respuesta::before {
+      content: "💬 Respuesta:";
+      position: absolute;
+      top: -1.2rem;
+      left: 1rem;
+      background-color: #f0fdfc;
+      padding: 0 0.5rem;
+      font-weight: bold;
+      color: #00796b;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Animación para aparecer */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilos para la tabla dentro de la respuesta */
+    #respuesta table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    #respuesta th,
+    #respuesta td {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    #respuesta thead {
+      background-color: #e0f7fa;
+    }
+
+    #respuesta tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    /* Spinner animación */
+    #loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 48px;
+      height: 48px;
+      margin-left: -24px;
+      margin-top: -24px;
+      border: 5px solid #0077b6;
+      border-top: 5px solid #00bfa6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 10;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analiza tu CSV con IA</h1>
+
+    <form id="form-subir" enctype="multipart/form-data">
+      <label for="file">Selecciona archivo CSV:</label>
+      <input type="file" id="file" name="file" accept=".csv" required />
+      <button type="submit">Subir CSV</button>
+    </form>
+
+    <form id="form-preguntar">
+      <label for="pregunta">Escribe tu pregunta:</label>
+      <textarea id="pregunta" name="pregunta" placeholder="Ej: ¿Cuál es el total de ventas?" required></textarea>
+      <button type="submit">Preguntar</button>
+    </form>
+
+    <div id="loading"></div>
+    <div id="respuesta"></div>
+  </div>
+
+  <!-- Librería para convertir Markdown a HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    const formSubir = document.getElementById('form-subir');
+    const formPreguntar = document.getElementById('form-preguntar');
+    const respuestaDiv = document.getElementById('respuesta');
+    const loadingDiv = document.getElementById('loading');
+
+    let archivoSubido = false;
+
+    formSubir.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('file');
+      if (fileInput.files.length === 0) {
+        alert('Por favor selecciona un archivo CSV');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const res = await fetch('/upload_csv/', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(data.message);
+          archivoSubido = true;
+          respuestaDiv.style.display = 'none';
+          respuestaDiv.innerHTML = '';
+        } else {
+          alert('Error al subir el CSV: ' + (data.error || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert('Error en la conexión: ' + err.message);
+      }
+    });
+
+    formPreguntar.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!archivoSubido) {
+        alert('Primero debes subir un archivo CSV');
+        return;
+      }
+
+      const pregunta = document.getElementById('pregunta').value.trim();
+      if (!pregunta) {
+        alert('Escribe una pregunta');
+        return;
+      }
+
+      loadingDiv.style.display = 'block';
+      respuestaDiv.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('pregunta', pregunta);
+
+      try {
+        const res = await fetch('/preguntar/', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        loadingDiv.style.display = 'none';
+
+        if (res.ok) {
+          respuestaDiv.innerHTML = marked.parse(data.respuesta || 'No se obtuvo respuesta');
+          respuestaDiv.style.display = 'block';
+        } else {
+          alert('Error al obtener respuesta: ' + (data.error || JSON.stringify(data)));
+        }
+      } catch (err) {
+        loadingDiv.style.display = 'none';
+        alert('Error en la conexión: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
