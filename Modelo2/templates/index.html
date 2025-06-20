@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analiza tu CSV con IA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    textarea, pre, table {
+      width: 100%;
+      margin-top: 1rem;
+      font-family: monospace;
+    }
+    input[type="file"], input[type="submit"], button {
+      margin-top: 10px;
+      padding: 8px 16px;
+    }
+    .resultado {
+      background: #f0f0f0;
+      border-left: 4px solid #333;
+      padding: 1rem;
+      white-space: pre-wrap;
+      margin-top: 1rem;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+    #resultado-table {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Analiza tu CSV con IA (Groq + Pandas)</h1>
+
+  <h2>1. Subir archivo CSV</h2>
+  <form id="upload-form">
+    <input type="file" name="file" accept=".csv" required />
+    <input type="submit" value="Subir CSV" />
+  </form>
+  <div id="upload-msg"></div>
+
+  <h2>2. Haz una pregunta</h2>
+  <form id="question-form">
+    <textarea id="pregunta" rows="3" placeholder="Ej: ¿Cuál es el promedio de edad por género?" required></textarea><br />
+    <button type="submit">Preguntar</button>
+  </form>
+
+  <h3>Código generado:</h3>
+  <pre id="codigo" class="resultado"></pre>
+
+  <h3>Resultado:</h3>
+  <div id="resultado-table"></div>
+
+  <script>
+    // Subir archivo CSV
+    document.getElementById("upload-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const fileInput = e.target.querySelector("input[type='file']");
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const res = await fetch("/upload_csv/", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      document.getElementById("upload-msg").innerText = data.message || data.error;
+    });
+
+    // Enviar pregunta y mostrar código + resultado
+    document.getElementById("question-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const pregunta = document.getElementById("pregunta").value;
+      const formData = new FormData();
+      formData.append("pregunta", pregunta);
+
+      const res = await fetch("/preguntar/", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      document.getElementById("codigo").innerText = data.codigo_python || data.error;
+
+      const resultadoDiv = document.getElementById("resultado-table");
+      resultadoDiv.innerHTML = "";
+
+      // Mostrar resultado como tabla (si es una lista de objetos)
+      if (Array.isArray(data.resultado)) {
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
+
+        if (data.resultado.length > 0) {
+          // Crear encabezados
+          const headers = Object.keys(data.resultado[0]);
+          const headerRow = document.createElement("tr");
+          headers.forEach((key) => {
+            const th = document.createElement("th");
+            th.textContent = key;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+
+          // Crear filas
+          data.resultado.forEach((row) => {
+            const tr = document.createElement("tr");
+            headers.forEach((key) => {
+              const td = document.createElement("td");
+              td.textContent = row[key];
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(thead);
+          table.appendChild(tbody);
+          resultadoDiv.appendChild(table);
+        } else {
+          resultadoDiv.textContent = "No hay datos para mostrar.";
+        }
+
+      } else {
+        // Mostrar como texto simple si no es tabla
+        resultadoDiv.textContent = data.resultado || "Sin resultado.";
+      }
+    });
+  </script>
+
+</body>
+</html>
