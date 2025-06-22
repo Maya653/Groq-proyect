@@ -64,7 +64,7 @@
   <pre id="codigo" class="resultado"></pre>
 
   <h3>Resultado:</h3>
-  <div id="resultado-table"></div>
+  <div id="resultado-table" class="resultado"></div>
 
   <script>
     // Subir archivo CSV
@@ -100,44 +100,78 @@
       const resultadoDiv = document.getElementById("resultado-table");
       resultadoDiv.innerHTML = "";
 
-      // Mostrar resultado como tabla (si es una lista de objetos)
-      if (Array.isArray(data.resultado)) {
+      const resultado = data.resultado;
+
+      if (!resultado) {
+        resultadoDiv.textContent = "Sin resultado.";
+        return;
+      }
+
+      if (resultado.tipo === "DataFrame") {
         const table = document.createElement("table");
         const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        // 🔹 Filtrar columnas que no sean "Unnamed"
+        const columnasFiltradas = resultado.columnas.filter(col => !col.startsWith("Unnamed"));
+
+        columnasFiltradas.forEach((col) => {
+          const th = document.createElement("th");
+          th.textContent = col;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
         const tbody = document.createElement("tbody");
+        resultado.filas.forEach((row) => {
+          const tr = document.createElement("tr");
+          columnasFiltradas.forEach((col) => {
+            const td = document.createElement("td");
+            td.textContent = row[col];
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        resultadoDiv.appendChild(table);
 
-        if (data.resultado.length > 0) {
-          // Crear encabezados
-          const headers = Object.keys(data.resultado[0]);
-          const headerRow = document.createElement("tr");
-          headers.forEach((key) => {
+      } else if (resultado.tipo === "str" && resultado.valor.includes("\n") && resultado.valor.includes("  ")) {
+        // 🔹 Si parece una tabla como texto
+        const lines = resultado.valor.trim().split("\n");
+        const headers = lines[0].trim().split(/\s{2,}/);
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        headers.forEach(h => {
+          if (!h.startsWith("Unnamed")) {
             const th = document.createElement("th");
-            th.textContent = key;
+            th.textContent = h;
             headerRow.appendChild(th);
-          });
-          thead.appendChild(headerRow);
+          }
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-          // Crear filas
-          data.resultado.forEach((row) => {
-            const tr = document.createElement("tr");
-            headers.forEach((key) => {
+        const tbody = document.createElement("tbody");
+        for (let i = 1; i < lines.length; i++) {
+          const rowData = lines[i].trim().split(/\s{2,}/);
+          const row = document.createElement("tr");
+          for (let j = 0; j < headers.length; j++) {
+            if (!headers[j].startsWith("Unnamed")) {
               const td = document.createElement("td");
-              td.textContent = row[key];
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          });
-
-          table.appendChild(thead);
-          table.appendChild(tbody);
-          resultadoDiv.appendChild(table);
-        } else {
-          resultadoDiv.textContent = "No hay datos para mostrar.";
+              td.textContent = rowData[j] || "";
+              row.appendChild(td);
+            }
+          }
+          tbody.appendChild(row);
         }
+        table.appendChild(tbody);
+        resultadoDiv.appendChild(table);
 
       } else {
-        // Mostrar como texto simple si no es tabla
-        resultadoDiv.textContent = data.resultado || "Sin resultado.";
+        resultadoDiv.textContent = JSON.stringify(resultado, null, 2);
       }
     });
   </script>
