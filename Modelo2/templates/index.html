@@ -3,178 +3,678 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Analiza tu CSV con IA</title>
+  <title>Analiza tu CSV con IA - Edición Épica</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500&display=swap');
+    
+    :root {
+      --primary: #00ffff;
+      --secondary: #ff00ff;
+      --accent: #ffff00;
+      --dark: #0a0a0a;
+      --surface: #1a1a1a;
+      --glass: rgba(255, 255, 255, 0.1);
+      --glow: 0 0 20px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
+      font-family: 'Roboto', sans-serif;
+      background: var(--dark);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
     }
-    h1, h2, h3 {
-      text-align: center;
-    }
-    textarea, pre, table {
+
+    /* Fondo animado con partículas */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      margin-top: 1rem;
-      font-family: monospace;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 0, 0.1) 0%, transparent 50%);
+      animation: backgroundShift 10s ease-in-out infinite alternate;
+      z-index: -1;
     }
-    input[type="file"], input[type="submit"], button {
-      margin-top: 10px;
-      padding: 8px 16px;
+
+    @keyframes backgroundShift {
+      0% { transform: translateX(0) translateY(0) scale(1); }
+      100% { transform: translateX(-20px) translateY(-20px) scale(1.1); }
     }
-    .resultado {
-      background: #f0f0f0;
-      border-left: 4px solid #333;
+
+    /* Partículas flotantes */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+      box-shadow: var(--glow) var(--primary);
+    }
+
+    .particle:nth-child(2n) {
+      background: var(--secondary);
+      box-shadow: var(--glow) var(--secondary);
+      animation-delay: -2s;
+    }
+
+    .particle:nth-child(3n) {
+      background: var(--accent);
+      box-shadow: var(--glow) var(--accent);
+      animation-delay: -4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Títulos con efectos épicos */
+    h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 3rem;
+      background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 3s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shimmer 2s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    h2, h3 {
+      font-family: 'Orbitron', monospace;
+      text-align: center;
+      margin: 2rem 0 1rem;
+      color: var(--primary);
+      text-shadow: var(--glow) var(--primary);
+      position: relative;
+    }
+
+
+
+    /* Contenedores con efecto glassmorphism */
+    .glass-container {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 0;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .glass-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .glass-container:hover::before {
+      left: 100%;
+    }
+
+    .glass-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 255, 255, 0.3);
+    }
+
+    /* Formularios y inputs con animaciones insanas */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    input[type="file"] {
       padding: 1rem;
+      border: 2px solid var(--primary);
+      border-radius: 15px;
+      background: rgba(0, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    input[type="file"]::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    input[type="file"]:hover::before {
+      left: 100%;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 1.5rem;
+      border: 2px solid var(--secondary);
+      border-radius: 15px;
+      background: rgba(255, 0, 255, 0.1);
+      color: #ffffff;
+      font-size: 1rem;
+      font-family: 'Roboto', sans-serif;
+      resize: vertical;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--glow) var(--accent);
+      transform: scale(1.02);
+    }
+
+    /* Botones épicos */
+    button, input[type="submit"] {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 25px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: var(--dark);
+      box-shadow: var(--glow) var(--primary);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      color: var(--dark);
+      box-shadow: var(--glow) var(--secondary);
+    }
+
+    button::before, input[type="submit"]::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s ease;
+    }
+
+    button:hover::before, input[type="submit"]:hover::before {
+      left: 100%;
+    }
+
+    button:hover, input[type="submit"]:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 30px rgba(0, 255, 255, 0.5);
+    }
+
+    button:active, input[type="submit"]:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Resultados con animaciones */
+    .resultado {
+      background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      padding: 2rem;
+      margin: 2rem 0;
+      position: relative;
+      overflow: hidden;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    pre {
+      font-family: 'Roboto Mono', monospace;
       white-space: pre-wrap;
-      margin-top: 1rem;
+      word-wrap: break-word;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 1.5rem;
+      border-radius: 10px;
+      border-left: 4px solid var(--accent);
+      overflow-x: auto;
+      animation: typewriter 0.5s ease-out;
     }
+
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    /* Tablas épicas */
     table {
+      width: 100%;
       border-collapse: collapse;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
+
     th, td {
-      border: 1px solid #aaa;
-      padding: 8px;
+      padding: 1rem;
       text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: background-color 0.3s ease;
     }
-    #resultado-table {
+
+    th {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: var(--dark);
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+    }
+
+    th::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 10px var(--accent); }
+      to { box-shadow: 0 0 20px var(--accent); }
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    tr:hover {
+      background: rgba(0, 255, 255, 0.1);
+      transform: scale(1.01);
+    }
+
+    /* Mensajes de estado */
+    #upload-msg {
+      padding: 1rem;
+      border-radius: 10px;
       margin-top: 1rem;
+      text-align: center;
+      font-weight: 500;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .success {
+      background: linear-gradient(45deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 255, 0.2));
+      border: 1px solid rgba(0, 255, 0, 0.5);
+      color: #00ff00;
+    }
+
+    .error {
+      background: linear-gradient(45deg, rgba(255, 0, 0, 0.2), rgba(255, 0, 255, 0.2));
+      border: 1px solid rgba(255, 0, 0, 0.5);
+      color: #ff0000;
+    }
+
+    /* Loading spinner épico */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+      
+      .container {
+        padding: 1rem;
+      }
+      
+      .glass-container {
+        padding: 1rem;
+      }
+    }
+
+    /* Efectos de scroll */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
+  <div class="particles" id="particles"></div>
+  
+  <div class="container">
+    <h1>🚀 Analiza tu CSV con IA 🚀</h1>
+    
+    <div class="glass-container fade-in">
+      <h2>📊 Subir archivo CSV</h2>
+      <form id="upload-form">
+        <input type="file" name="file" accept=".csv" required class="file-input" />
+        <input type="submit" value="⚡ Subir CSV ⚡" class="btn-primary" />
+      </form>
+      <div id="upload-msg"></div>
+    </div>
 
-  <h1>Analiza tu CSV con IA (Groq + Pandas)</h1>
+    <div class="glass-container fade-in">
+      <h2>🤖 Haz una pregunta</h2>
+      <form id="question-form">
+        <textarea id="pregunta" rows="4" placeholder="Ej: ¿Cuál es el promedio de edad por género? 🤔" required></textarea>
+        <button type="submit" class="btn-secondary">🔍 Preguntar</button>
+      </form>
+    </div>
 
-  <h2>1. Subir archivo CSV</h2>
-  <form id="upload-form">
-    <input type="file" name="file" accept=".csv" required />
-    <input type="submit" value="Subir CSV" />
-  </form>
-  <div id="upload-msg"></div>
+    <div class="glass-container fade-in" id="code-section" style="display: none;">
+      <h3>💻 Código generado:</h3>
+      <pre id="codigo" class="resultado"></pre>
+    </div>
 
-  <h2>2. Haz una pregunta</h2>
-  <form id="question-form">
-    <textarea id="pregunta" rows="3" placeholder="Ej: ¿Cuál es el promedio de edad por género?" required></textarea><br />
-    <button type="submit">Preguntar</button>
-  </form>
-
-  <h3>Código generado:</h3>
-  <pre id="codigo" class="resultado"></pre>
-
-  <h3>Resultado:</h3>
-  <div id="resultado-table" class="resultado"></div>
+    <div class="glass-container fade-in" id="result-section" style="display: none;">
+      <h3>📈 Resultado:</h3>
+      <div id="resultado-table" class="resultado"></div>
+    </div>
+  </div>
 
   <script>
+    // Crear partículas flotantes
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Efectos de scroll
+    function handleScroll() {
+      const elements = document.querySelectorAll('.fade-in');
+      elements.forEach(element => {
+        const elementTop = element.getBoundingClientRect().top;
+        const elementVisible = 150;
+        
+        if (elementTop < window.innerHeight - elementVisible) {
+          element.classList.add('visible');
+        }
+      });
+    }
+
+    // Mostrar spinner de carga
+    function showSpinner(container) {
+      container.innerHTML = '<div class="spinner"></div>';
+    }
+
     // Subir archivo CSV
     document.getElementById("upload-form").addEventListener("submit", async function (e) {
       e.preventDefault();
       const fileInput = e.target.querySelector("input[type='file']");
+      const msgDiv = document.getElementById("upload-msg");
+      
+      showSpinner(msgDiv);
+      
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
 
-      const res = await fetch("/upload_csv/", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      document.getElementById("upload-msg").innerText = data.message || data.error;
+      try {
+        const res = await fetch("/upload_csv/", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        
+        msgDiv.className = data.error ? 'error' : 'success';
+        msgDiv.innerText = data.message || data.error;
+      } catch (error) {
+        msgDiv.className = 'error';
+        msgDiv.innerText = 'Error de conexión';
+      }
     });
 
     // Enviar pregunta y mostrar código + resultado
     document.getElementById("question-form").addEventListener("submit", async function (e) {
       e.preventDefault();
       const pregunta = document.getElementById("pregunta").value;
+      const codigoDiv = document.getElementById("codigo");
+      const resultadoDiv = document.getElementById("resultado-table");
+      const codeSection = document.getElementById("code-section");
+      const resultSection = document.getElementById("result-section");
+      
+      // Mostrar secciones y spinners
+      codeSection.style.display = 'block';
+      resultSection.style.display = 'block';
+      showSpinner(codigoDiv);
+      showSpinner(resultadoDiv);
+      
       const formData = new FormData();
       formData.append("pregunta", pregunta);
 
-      const res = await fetch("/preguntar/", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-
-      document.getElementById("codigo").innerText = data.codigo_python || data.error;
-
-      const resultadoDiv = document.getElementById("resultado-table");
-      resultadoDiv.innerHTML = "";
-
-      const resultado = data.resultado;
-
-      if (!resultado) {
-        resultadoDiv.textContent = "Sin resultado.";
-        return;
-      }
-
-      if (resultado.tipo === "DataFrame") {
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        const headerRow = document.createElement("tr");
-
-        // 🔹 Filtrar columnas que no sean "Unnamed"
-        const columnasFiltradas = resultado.columnas.filter(col => !col.startsWith("Unnamed"));
-
-        columnasFiltradas.forEach((col) => {
-          const th = document.createElement("th");
-          th.textContent = col;
-          headerRow.appendChild(th);
+      try {
+        const res = await fetch("/preguntar/", {
+          method: "POST",
+          body: formData,
         });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
+        const data = await res.json();
 
-        const tbody = document.createElement("tbody");
-        resultado.filas.forEach((row) => {
-          const tr = document.createElement("tr");
-          columnasFiltradas.forEach((col) => {
-            const td = document.createElement("td");
-            td.textContent = row[col];
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        resultadoDiv.appendChild(table);
+        // Mostrar código con efecto typewriter
+        codigoDiv.innerText = data.codigo_python || data.error;
 
-      } else if (resultado.tipo === "str" && resultado.valor.includes("\n") && resultado.valor.includes("  ")) {
-        // 🔹 Si parece una tabla como texto
-        const lines = resultado.valor.trim().split("\n");
-        const headers = lines[0].trim().split(/\s{2,}/);
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        const headerRow = document.createElement("tr");
+        const resultado = data.resultado;
 
-        headers.forEach(h => {
-          if (!h.startsWith("Unnamed")) {
-            const th = document.createElement("th");
-            th.textContent = h;
-            headerRow.appendChild(th);
-          }
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-        for (let i = 1; i < lines.length; i++) {
-          const rowData = lines[i].trim().split(/\s{2,}/);
-          const row = document.createElement("tr");
-          for (let j = 0; j < headers.length; j++) {
-            if (!headers[j].startsWith("Unnamed")) {
-              const td = document.createElement("td");
-              td.textContent = rowData[j] || "";
-              row.appendChild(td);
-            }
-          }
-          tbody.appendChild(row);
+        if (!resultado) {
+          resultadoDiv.innerHTML = '<div class="error">Sin resultado.</div>';
+          return;
         }
-        table.appendChild(tbody);
-        resultadoDiv.appendChild(table);
 
-      } else {
-        resultadoDiv.textContent = JSON.stringify(resultado, null, 2);
+        if (resultado.tipo === "DataFrame") {
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+
+          // Filtrar columnas que no sean "Unnamed"
+          const columnasFiltradas = resultado.columnas.filter(col => !col.startsWith("Unnamed"));
+
+          columnasFiltradas.forEach((col) => {
+            const th = document.createElement("th");
+            th.textContent = col;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          resultado.filas.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            tr.style.animationDelay = (index * 0.1) + 's';
+            columnasFiltradas.forEach((col) => {
+              const td = document.createElement("td");
+              td.textContent = row[col];
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          
+          resultadoDiv.innerHTML = '';
+          resultadoDiv.appendChild(table);
+
+        } else if (resultado.tipo === "str" && resultado.valor.includes("\n") && resultado.valor.includes("  ")) {
+          // Si parece una tabla como texto
+          const lines = resultado.valor.trim().split("\n");
+          const headers = lines[0].trim().split(/\s{2,}/);
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+
+          headers.forEach(h => {
+            if (!h.startsWith("Unnamed")) {
+              const th = document.createElement("th");
+              th.textContent = h;
+              headerRow.appendChild(th);
+            }
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          for (let i = 1; i < lines.length; i++) {
+            const rowData = lines[i].trim().split(/\s{2,}/);
+            const row = document.createElement("tr");
+            row.style.animationDelay = (i * 0.1) + 's';
+            for (let j = 0; j < headers.length; j++) {
+              if (!headers[j].startsWith("Unnamed")) {
+                const td = document.createElement("td");
+                td.textContent = rowData[j] || "";
+                row.appendChild(td);
+              }
+            }
+            tbody.appendChild(row);
+          }
+          table.appendChild(tbody);
+          
+          resultadoDiv.innerHTML = '';
+          resultadoDiv.appendChild(table);
+
+        } else {
+          resultadoDiv.innerHTML = '<pre>' + JSON.stringify(resultado, null, 2) + '</pre>';
+        }
+      } catch (error) {
+        codigoDiv.innerText = 'Error de conexión';
+        resultadoDiv.innerHTML = '<div class="error">Error al procesar la solicitud</div>';
       }
     });
-  </script>
 
+    // Inicializar efectos
+    window.addEventListener('load', () => {
+      createParticles();
+      handleScroll();
+    });
+
+    window.addEventListener('scroll', handleScroll);
+
+    // Añadir efectos de hover a elementos interactivos
+    document.querySelectorAll('input, textarea, button').forEach(element => {
+      element.addEventListener('focus', function() {
+        this.style.transform = 'scale(1.02)';
+      });
+      
+      element.addEventListener('blur', function() {
+        this.style.transform = 'scale(1)';
+      });
+    });
+  </script>
 </body>
 </html>
