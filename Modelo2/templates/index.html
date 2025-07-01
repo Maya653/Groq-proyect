@@ -485,196 +485,226 @@
     </div>
   </div>
 
-  <script>
-    // Crear partículas flotantes
-    function createParticles() {
-      const particlesContainer = document.getElementById('particles');
-      for (let i = 0; i < 30; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 6 + 's';
-        particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
-        particlesContainer.appendChild(particle);
-      }
+ <script>
+  const API_TOKEN = "1234"; // Token de autenticación
+
+  // Crear partículas flotantes
+  function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 6 + 's';
+      particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+      particlesContainer.appendChild(particle);
     }
+  }
 
-    // Efectos de scroll
-    function handleScroll() {
-      const elements = document.querySelectorAll('.fade-in');
-      elements.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
-        const elementVisible = 150;
-        
-        if (elementTop < window.innerHeight - elementVisible) {
-          element.classList.add('visible');
-        }
-      });
-    }
-
-    // Mostrar spinner de carga
-    function showSpinner(container) {
-      container.innerHTML = '<div class="spinner"></div>';
-    }
-
-    // Subir archivo CSV
-    document.getElementById("upload-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const fileInput = e.target.querySelector("input[type='file']");
-      const msgDiv = document.getElementById("upload-msg");
-      
-      showSpinner(msgDiv);
-      
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-
-      try {
-        const res = await fetch("/upload_csv/", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        
-        msgDiv.className = data.error ? 'error' : 'success';
-        msgDiv.innerText = data.message || data.error;
-      } catch (error) {
-        msgDiv.className = 'error';
-        msgDiv.innerText = 'Error de conexión';
+  // Efectos de scroll
+  function handleScroll() {
+    const elements = document.querySelectorAll('.fade-in');
+    elements.forEach(element => {
+      const elementTop = element.getBoundingClientRect().top;
+      const elementVisible = 150;
+      if (elementTop < window.innerHeight - elementVisible) {
+        element.classList.add('visible');
       }
     });
+  }
 
-    // Enviar pregunta y mostrar código + resultado
-    document.getElementById("question-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const pregunta = document.getElementById("pregunta").value;
-      const codigoDiv = document.getElementById("codigo");
-      const resultadoDiv = document.getElementById("resultado-table");
-      const codeSection = document.getElementById("code-section");
-      const resultSection = document.getElementById("result-section");
-      
-      // Mostrar secciones y spinners
-      codeSection.style.display = 'block';
-      resultSection.style.display = 'block';
-      showSpinner(codigoDiv);
-      showSpinner(resultadoDiv);
-      
-      const formData = new FormData();
-      formData.append("pregunta", pregunta);
+  // Mostrar spinner de carga
+  function showSpinner(container) {
+    container.innerHTML = '<div class="spinner"></div>';
+  }
 
-      try {
-        const res = await fetch("/preguntar/", {
-          method: "POST",
-          body: formData,
+  // Subir archivo CSV y guardar session_id
+  document.getElementById("upload-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const fileInput = e.target.querySelector("input[type='file']");
+    const msgDiv = document.getElementById("upload-msg");
+
+    showSpinner(msgDiv);
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    try {
+      const res = await fetch("/upload_csv/", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${API_TOKEN}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      msgDiv.className = data.error ? 'error' : 'success';
+      msgDiv.innerText = data.message || data.error;
+
+      // GUARDAR SESSION_ID GLOBALMENTE
+      if (data.session_id) {
+        window.sessionId = data.session_id;
+      }
+
+    } catch (error) {
+      msgDiv.className = 'error';
+      msgDiv.innerText = 'Error de conexión';
+    }
+  });
+
+   // Enviar pregunta
+  document.getElementById("question-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const pregunta = document.getElementById("pregunta").value;
+    const codigoDiv = document.getElementById("codigo");
+    const resultadoDiv = document.getElementById("resultado-table");
+    const codeSection = document.getElementById("code-section");
+    const resultSection = document.getElementById("result-section");
+
+    // Verificar que exista session_id
+    if (!window.sessionId) {
+      resultadoDiv.innerHTML = '<div class="error">Debes subir un CSV antes de preguntar.</div>';
+      return;
+    }
+
+    // Mostrar secciones y spinners
+    codeSection.style.display = 'block';
+    resultSection.style.display = 'block';
+    showSpinner(codigoDiv);
+    showSpinner(resultadoDiv);
+
+    try {
+      const res = await fetch("/preguntar/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_TOKEN}`
+        },
+        body: JSON.stringify({
+          pregunta: pregunta,
+          session_id: window.sessionId
+        }),
+      });
+
+      const data = await res.json();
+
+      // Mostrar código
+      codigoDiv.innerText = data.codigo_python || data.error;
+
+      const resultado = data.resultado;
+
+      if (!resultado) {
+        resultadoDiv.innerHTML = '<div class="error">Sin resultado.</div>';
+        return;
+      }
+
+      // Mostrar DataFrame como tabla
+      if (resultado.tipo === "DataFrame") {
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        const columnasFiltradas = resultado.columnas.filter(col => !col.startsWith("Unnamed"));
+        columnasFiltradas.forEach(col => {
+          const th = document.createElement("th");
+          th.textContent = col;
+          headerRow.appendChild(th);
         });
-        const data = await res.json();
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-        // Mostrar código con efecto typewriter
-        codigoDiv.innerText = data.codigo_python || data.error;
+        const tbody = document.createElement("tbody");
+        resultado.filas.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          tr.style.animationDelay = (index * 0.1) + 's';
+          columnasFiltradas.forEach(col => {
+            const td = document.createElement("td");
+            td.textContent = row[col];
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
 
-        const resultado = data.resultado;
+        table.appendChild(tbody);
+        resultadoDiv.innerHTML = '';
+        resultadoDiv.appendChild(table);
 
-        if (!resultado) {
-          resultadoDiv.innerHTML = '<div class="error">Sin resultado.</div>';
-          return;
-        }
+      } 
+      // Si es texto que parece tabla
+      else if (resultado.tipo === "str" && resultado.valor?.includes("\n") && resultado.valor.includes("  ")) {
+        const lines = resultado.valor.trim().split("\n");
+        const headers = lines[0].trim().split(/\s{2,}/);
 
-        if (resultado.tipo === "DataFrame") {
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          const headerRow = document.createElement("tr");
-
-          // Filtrar columnas que no sean "Unnamed"
-          const columnasFiltradas = resultado.columnas.filter(col => !col.startsWith("Unnamed"));
-
-          columnasFiltradas.forEach((col) => {
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        headers.forEach(h => {
+          if (!h.startsWith("Unnamed")) {
             const th = document.createElement("th");
-            th.textContent = col;
+            th.textContent = h;
             headerRow.appendChild(th);
-          });
-          thead.appendChild(headerRow);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          resultado.filas.forEach((row, index) => {
-            const tr = document.createElement("tr");
-            tr.style.animationDelay = (index * 0.1) + 's';
-            columnasFiltradas.forEach((col) => {
-              const td = document.createElement("td");
-              td.textContent = row[col];
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          });
-          table.appendChild(tbody);
-          
-          resultadoDiv.innerHTML = '';
-          resultadoDiv.appendChild(table);
-
-        } else if (resultado.tipo === "str" && resultado.valor.includes("\n") && resultado.valor.includes("  ")) {
-          // Si parece una tabla como texto
-          const lines = resultado.valor.trim().split("\n");
-          const headers = lines[0].trim().split(/\s{2,}/);
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          const headerRow = document.createElement("tr");
-
-          headers.forEach(h => {
-            if (!h.startsWith("Unnamed")) {
-              const th = document.createElement("th");
-              th.textContent = h;
-              headerRow.appendChild(th);
-            }
-          });
-          thead.appendChild(headerRow);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          for (let i = 1; i < lines.length; i++) {
-            const rowData = lines[i].trim().split(/\s{2,}/);
-            const row = document.createElement("tr");
-            row.style.animationDelay = (i * 0.1) + 's';
-            for (let j = 0; j < headers.length; j++) {
-              if (!headers[j].startsWith("Unnamed")) {
-                const td = document.createElement("td");
-                td.textContent = rowData[j] || "";
-                row.appendChild(td);
-              }
-            }
-            tbody.appendChild(row);
           }
-          table.appendChild(tbody);
-          
-          resultadoDiv.innerHTML = '';
-          resultadoDiv.appendChild(table);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-        } else {
-          resultadoDiv.innerHTML = '<pre>' + JSON.stringify(resultado, null, 2) + '</pre>';
+        const tbody = document.createElement("tbody");
+        for (let i = 1; i < lines.length; i++) {
+          const rowData = lines[i].trim().split(/\s{2,}/);
+          const row = document.createElement("tr");
+          row.style.animationDelay = (i * 0.1) + 's';
+          for (let j = 0; j < headers.length; j++) {
+            if (!headers[j].startsWith("Unnamed")) {
+              const td = document.createElement("td");
+              td.textContent = rowData[j] || "";
+              row.appendChild(td);
+            }
+          }
+          tbody.appendChild(row);
         }
-      } catch (error) {
-        codigoDiv.innerText = 'Error de conexión';
-        resultadoDiv.innerHTML = '<div class="error">Error al procesar la solicitud</div>';
+
+        table.appendChild(tbody);
+        resultadoDiv.innerHTML = '';
+        resultadoDiv.appendChild(table);
+
+      } 
+      // Si es Series, list, dict u otro tipo
+      else if (["Series", "list", "dict"].includes(resultado.tipo)) {
+        resultadoDiv.innerHTML = '<pre>' + JSON.stringify(resultado.valor, null, 2) + '</pre>';
+      } 
+      // Si es string o texto plano
+      else if (["str", "texto"].includes(resultado.tipo)) {
+        resultadoDiv.innerHTML = '<pre>' + (resultado.salida || resultado.valor || 'Sin contenido') + '</pre>';
+      } 
+      // Otro caso genérico
+      else {
+        resultadoDiv.innerHTML = '<pre>' + JSON.stringify(resultado, null, 2) + '</pre>';
       }
-    });
 
-    // Inicializar efectos
-    window.addEventListener('load', () => {
-      createParticles();
-      handleScroll();
-    });
+    } catch (error) {
+      codigoDiv.innerText = 'Error de conexión';
+      resultadoDiv.innerHTML = '<div class="error">Error al procesar la solicitud</div>';
+    }
+  });
 
-    window.addEventListener('scroll', handleScroll);
+  // Efectos de foco
+  document.querySelectorAll('input, textarea, button').forEach(el => {
+    el.addEventListener('focus', () => el.style.transform = 'scale(1.02)');
+    el.addEventListener('blur', () => el.style.transform = 'scale(1)');
+  });
 
-    // Añadir efectos de hover a elementos interactivos
-    document.querySelectorAll('input, textarea, button').forEach(element => {
-      element.addEventListener('focus', function() {
-        this.style.transform = 'scale(1.02)';
-      });
-      
-      element.addEventListener('blur', function() {
-        this.style.transform = 'scale(1)';
-      });
-    });
-  </script>
+  // Inicializar
+  window.addEventListener('load', () => {
+    handleScroll();
+    createParticles();
+  });
+
+  window.addEventListener('scroll', handleScroll);
+</script>
+
 </body>
 </html>
