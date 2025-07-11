@@ -1,5 +1,8 @@
 fastapi
-uvicorn[standard]
+uvicorn
+aiohttp
 pandas
-requests
+numpy
+psutil
+slowapi
 python-multipart
