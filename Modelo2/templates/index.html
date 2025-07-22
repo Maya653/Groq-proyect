@@ -458,10 +458,10 @@
     <h1>🚀 Analiza tu CSV con IA 🚀</h1>
     
     <div class="glass-container fade-in">
-      <h2>📊 Subir archivo CSV</h2>
+      <h2>📊 Subir archivo CSV o Base de Datos</h2>
       <form id="upload-form">
-        <input type="file" name="file" accept=".csv" required class="file-input" />
-        <input type="submit" value="⚡ Subir CSV ⚡" class="btn-primary" />
+        <input type="file" name="file" accept=".csv,.db" required class="file-input" />
+        <input type="submit" value="⚡ Subir Archivo ⚡" class="btn-primary" />
       </form>
       <div id="upload-msg"></div>
     </div>
@@ -469,7 +469,7 @@
     <div class="glass-container fade-in">
       <h2>🤖 Haz una pregunta</h2>
       <form id="question-form">
-        <textarea id="pregunta" rows="4" placeholder="Ej: ¿Cuál es el promedio de edad por género? 🤔" required></textarea>
+        <textarea id="pregunta" rows="4" placeholder="Ej: ¿Cuál es el promedio de edad por género? ¿Cuántos registros hay? 🤔" required></textarea>
         <button type="submit" class="btn-secondary">🔍 Preguntar</button>
       </form>
     </div>
@@ -531,7 +531,7 @@
     formData.append("file", fileInput.files[0]);
 
     try {
-      const res = await fetch("/upload_csv/", {
+      const res = await fetch("/upload_file/", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_TOKEN}`,
@@ -567,7 +567,7 @@
 
     // Verificar que exista session_id
     if (!window.sessionId) {
-      resultadoDiv.innerHTML = '<div class="error">Debes subir un CSV antes de preguntar.</div>';
+      resultadoDiv.innerHTML = '<div class="error">Debes subir un archivo CSV o DB antes de preguntar.</div>';
       return;
     }
 
@@ -593,7 +593,13 @@
       const data = await res.json();
 
       // Mostrar código
-      codigoDiv.innerText = data.codigo_python || data.error;
+      if (data.codigo_sql) {
+        codigoDiv.innerText = data.codigo_sql;
+      } else if (data.codigo_python) {
+        codigoDiv.innerText = data.codigo_python;
+      } else {
+        codigoDiv.innerText = data.error || 'No se generó código';
+      }
 
       const resultado = data.resultado;
 
